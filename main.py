@@ -1,6 +1,7 @@
 from parser import parse_followers, parse_following
-from snapshot import save_snapshot, load_snapshots, get_latest_snapshot
+from snapshot import save_snapshot, load_snapshots
 from diff import get_diff
+from ghost import get_ghosts, get_fans, get_mutuals
 
 followers = parse_followers()
 following = parse_following()
@@ -10,13 +11,27 @@ print(f"Following: {len(following)}")
 
 save_snapshot(followers, following)
 
-snapshots = load_snapshots()
+# Ghost detection
+ghosts = get_ghosts(followers, following)
+fans = get_fans(followers, following)
+mutuals = get_mutuals(followers, following)
 
+print(f"\n--- Ghost Report ---")
+print(f"👻 Ghosts (you follow, they don't): {len(ghosts)}")
+print(f"🤩 Fans (they follow, you don't):   {len(fans)}")
+print(f"🤝 Mutuals:                          {len(mutuals)}")
+
+if ghosts:
+    print(f"\nGhost accounts:")
+    for ghost in sorted(ghosts):
+        print(f"  - {ghost}")
+
+# Diff logic
+snapshots = load_snapshots()
 if len(snapshots) >= 2:
     old = snapshots[-2]
     new = snapshots[-1]
     diff = get_diff(old, new)
-
     print("\n--- Changes Since Last Scan ---")
     print(f"Unfollowed you:  {diff['unfollowed_you'] or 'none'}")
     print(f"You unfollowed:  {diff['you_unfollowed'] or 'none'}")
